@@ -5,6 +5,13 @@ from PIL import Image, ImageTk
 
 
 # ==============================  Support Start =========================================
+
+# 游戏程序实例 供视图绑定响应事件
+app = None
+
+# 窗口大小
+WINDOWS_WIDTH = 800
+WINDOWS_HEIGHT = 600
 # 任务1,2,3
 TASK_ONE = 1
 TASK_TWO = 2
@@ -660,7 +667,7 @@ class AbstractGrid(tk.Canvas):
     其中**kwargs表示所有被tk.Canvas类使用的变量也能被AbstractGrid类使用。
     """
     def __init__(self, master, rows, cols, width, height, **kwargs):
-        super().__init__(master=master)
+        super().__init__(master=master, width=width, height=height, bg=kwargs['bg'])
         # 父窗口
         self.master = master
         # 行
@@ -673,9 +680,11 @@ class AbstractGrid(tk.Canvas):
         self.height = height
         # 参数
         self.args = kwargs
+        # 背景色
+        self.bg = kwargs['bg']
         print(self.args)
         # 画布
-        self.canvas_map = tk.Canvas(master=self.master, width=self.map_width, height=self.height)
+        # self.canvas = tk.Canvas(master=self.master, width=self.width, height=self.height)
 
 
 class DungeonMap(AbstractGrid):
@@ -687,7 +696,56 @@ class DungeonMap(AbstractGrid):
     Size指地图中的行数（与列数相等），width指格子的宽和高的像素（pixel）。
     """
     def __init__(self, master, size, width=600, **kwargs):
-        super().__init__(master, size, size, width, width, **kwargs)
+        super().__init__(master, size, size, width*size, width*size, **kwargs)
+        # 游戏地图初始化
+        # 格子高度和宽度
+        self.item_height = width
+        self.item_width = width
+        self.map_info = kwargs['map_info']
+        self.play_pos = kwargs['player_pos']
+        for item_pos, item in self.map_info.items():
+            x, y = item_pos
+            if isinstance(item, Wall):
+                print("WALL === {},{}".format(x, y))
+                self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
+                                                 (x + 1) * self.item_height, fill=MAP_COLOR["WALL"])
+            elif isinstance(item, Key):
+                print("Key === {},{}".format(x, y))
+                self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
+                                                 (x + 1) * self.item_height, fill=MAP_COLOR["KEY"], tag="key_pos")
+                self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Trash",
+                                            font="Calibri 15", tag="key_font")
+            elif isinstance(item, MoveIncrease):
+                print("Move === {},{}".format(x, y))
+                self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
+                                                 (x + 1) * self.item_height, fill=MAP_COLOR["MOVEINCREASE"],
+                                                 tag="move_pos")
+                self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Banana",
+                                            font="Calibri 15", tag="move_font")
+            elif isinstance(item, Door):
+                print("Door === {},{}".format(x, y))
+                self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
+                                                 (x + 1) * self.item_height, fill=MAP_COLOR["DOOR"], tag="door_pos")
+                self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Nest",
+                                            font="Calibri 15", tag="door_font")
+            else:
+                print("No Right Entity...")
+        # 绘制人物坐标
+        player_x, player_y = self.play_pos
+        self.create_rectangle(player_y * self.item_width, player_x * self.item_height,
+                                         (player_y + 1) * self.item_width,
+                                         (player_x + 1) * self.item_height, fill=MAP_COLOR["PLAYER"], tag="player_pos")
+        self.create_text((player_y + 0.5) * self.item_width, (player_x + 0.5) * self.item_height,
+                                    text="Ibis",
+                                    font="Calibri 15", tag="player_font")
+        # 让画布获得焦点,对于键盘
+        self.focus_set()
+        self.bind('<Key>', self.user_clicked_keyboard)
+
+    # 根据用户点击的键盘 计算用户点击的值
+    def user_clicked_keyboard(self, event):
+        if event.char in ['a', 'w', 's', 'd']:
+            app.user_input_handler(event.char.upper())
 
 
 class KeyPad(AbstractGrid):
@@ -695,27 +753,80 @@ class KeyPad(AbstractGrid):
     一个继承AbstractGrid类的代表界面中wsad软键盘的视图类
     使用tk.Canvas类中的create rectangle和create text方法来实现给每个方向键代表的格子上叠加方向字wsad的功能。
     """
-    def __init__(self, master, width=200, height=100, **kwargs):
-        super().__init__(master, 2, 3, width, height, **kwargs)
+    def __init__(self, master, rows, colums, width=200, height=100, **kwargs):
+        super().__init__(master, rows, colums, width*colums, height*rows, **kwargs)
+
+        # 游戏键盘
+        # w按键
+        self.create_rectangle(0 * width, height*rows*2/5, 1 * width, height*rows*2/5 + height, fill=MAP_COLOR['WALL'])
+        self.create_text(0.5 * width, height*rows*2/5 + height / 2, text="W", font="Calibri 20")
+        # s按键
+        self.create_rectangle(1 * width, height*rows*2/5, 2 * width, height*rows*2/5 + height, fill=MAP_COLOR['WALL'])
+        self.create_text(1.5 * width, height*rows*2/5 + height / 2, text="S", font="Calibri 20")
+        # n按键
+        self.create_rectangle(1 * width, height*rows*2/5 - height, 2 * width, height*rows*2/5, fill=MAP_COLOR['WALL'])
+        self.create_text(1.5 * width, height*rows*2/5 - height / 2, text="N", font="Calibri 20")
+        # e按键
+        self.create_rectangle(2 * width, height*rows*2/5, 3 * width, height*rows*2/5 + height, fill=MAP_COLOR['WALL'])
+        self.create_text(2.5 * width, height*rows*2/5 + height / 2, text="E", font="Calibri 20")
+
+        # 保存键盘坐标 确定用户点击是哪个键
+        self.canvas_wsad_pos = {
+            "W": [0 * width, height*rows*2/5, 1 * width, height*rows*2/5 + height],
+            "S": [1 * width, height*rows*2/5, 2 * width, height*rows*2/5 + height],
+            "N": [1 * width, height*rows*2/5 - height, 2 * width, height*rows*2/5],
+            "E": [2 * width, height*rows*2/5, 3 * width, height*rows*2/5 + height]
+        }
+
+        print(self.canvas_wsad_pos)
+
+        # 绑定用户鼠标/键盘事件
+        self.bind('<Button-1>', self.user_clicked_mouse)
+
+    # 根据用户点击屏幕坐标 计算用户点击的值
+    def user_clicked_mouse(self, event):
+        map = {
+            "W": "A",
+            "S": "S",
+            "N": "W",
+            "E": "D"
+        }
+        for direction, pos in self.canvas_wsad_pos.items():
+            if event.x > pos[0] and event.x < pos[2] and event.y > pos[1] and event.y < pos[3]:
+                # W S N E 转换 W S A D
+                direction = map[direction]
+                # 用户逻辑处理
+                app.user_input_handler(direction=direction)
+
+
+class StatusBar(tk.Frame):
+    """
+        窗口底部状态条
+    """
+    def __init__(self, master, width, height, **kwargs):
+        super().__init__(master=master, width=width, height=height, bg='White')
+        # TASK2 底部状态栏分三块 宽度均分
+        self.frame_1 = tk.Frame(master=self, width=width/3, height=height)
+        self.frame_2 = tk.Frame(master=self, width=width/3, height=height)
+        self.frame_3 = tk.Frame(master=self, width=width/3, height=height)
+        self.frame_1.pack(side=tk.LEFT)
+        self.frame_2.pack(side=tk.LEFT)
+        self.frame_3.pack(side=tk.LEFT)
+        # frame1 两个Button
+        self.button_new_game = tk.Button(master=self.frame_1, text="New game", bd='1', command=app.new_game)
+        self.button_game_over = tk.Button(master=self.frame_1, text="Quit", bd='1', command=app.quit)
+        self.button_new_game.pack(side=tk.TOP)
+        self.button_game_over.pack(side=tk.BOTTOM)
+        # frame2
+
+        # frame3
+
 
 
 # ============================== View Class End =========================================
 
+
 # ============================== Controller Class Start =========================================
-class GameApp(object):
-    """
-    GameApp类是控制器类，能控制视图类和模型类间的交流
-    task用来选择模式，其中TASK_ONE是一些自定义的可以使游戏像示例图那样展示的常量
-    dungeon_name是用来加载等级的文件名。
-    """
-    def __init__(self, task=TASK_ONE, dungeon_name="game2.txt"):
-        self.task = task
-        # 游戏初始化
-        self.gamelogic = GameLogic(dungeon_name)
-        # 创建游戏界面
-        main_window = MainWindow(task=task, game_logic=self.gamelogic)
-
-
 class GameLogic(object):
     """
     # GameLogic类包含所有的游戏信息和游戏该怎么玩
@@ -915,10 +1026,154 @@ class GameLogic(object):
         :return:
         """
         return self._win
+
+
+class GameApp(object):
+    """
+    GameApp类是控制器类，能控制视图类和模型类间的交流
+    task用来选择模式，其中TASK_ONE是一些自定义的可以使游戏像示例图那样展示的常量
+    dungeon_name是用来加载等级的文件名。
+    """
+
+    def __init__(self, task=TASK_ONE, dungeon_name="game2.txt"):
+        # 任务
+        self.task = task
+        # 游戏地图
+        self.dungeon_name = dungeon_name
+        # 游戏初始化
+        # self.game_logic = GameLogic(dungeon_name)
+        # 创建游戏界面
+        # main_window = MainWindow(task=task, game_logic=self.game_logic)
+
+        # 主窗口
+        self.window = tk.Tk()
+        # 标题
+        self.window.title("Key Cave Adventure Game")
+        # 窗口大小
+        self.window.geometry("{}x{}".format(WINDOWS_WIDTH, WINDOWS_HEIGHT))
+        # 初始化游戏逻辑
+        self.game_logic = GameLogic(dungeon_name=dungeon_name)
+        # 添加组件
+        self.add_component()
+        # TASK 1
+        # 窗口宽800*600 分给游戏地图600*600 键盘200*600
+        # 游戏每个格子的宽和高 = 600 / 地图size
+        self.item_width = int(600 / self.game_logic.get_dungeon_size())
+        self.item_height = int(600 / self.game_logic.get_dungeon_size())
+        self.canvas_map = DungeonMap(self.window, self.game_logic.get_dungeon_size(), width=self.item_width,
+                                map_info=self.game_logic.get_game_information(),
+                                player_pos=self.game_logic.get_player().get_position(),
+                                bg=BASE_COLOR)
+        self.canvas_map.pack(side=tk.LEFT)
+        # 键盘 200*600  键盘宽为200/3 = 60  键盘高*rows=600
+        self.canvas_key = KeyPad(self.window, 20, 3, width=60, height=30, bg='White')
+        self.canvas_key.pack(side=tk.RIGHT)
+
+        # TASK 2
+
+        # 更新app实例
+        global app
+        app = self
+
+        # 进入主循环
+        # self.window.mainloop()
+
+    def add_component(self):
+        if self.task == TASK_ONE:
+            pass
+        elif self.task == TASK_TWO:
+            pass
+        elif self.task == TASK_THREE:
+            pass
+        else:
+            print("错误的任务选项...")
+
+    # 用户输入处理逻辑
+    def user_input_handler(self, direction):
+        print("用户往{}方向走了一步...".format(direction))
+        # 检查指定方向是否有实体
+        if not self.game_logic.collision_check(direction):
+            # 不会碰到实体 可能没有实体 或实体是道具
+            entity = self.game_logic.get_entity_in_direction(direction)
+            if not entity:
+                # 没有实体 直接移动
+                pass
+            else:
+                # 道具 钥匙 或 门
+                entity.on_hit(self.game_logic)
+                # 判断是碰到什么实体 删除对应的图标 移动用户位置
+                if isinstance(entity, Key):
+                    print("用户拿到钥匙...")
+                    self.canvas_map.delete("key_pos")
+                    self.canvas_map.delete("key_font")
+                elif isinstance(entity, MoveIncrease):
+                    print("用户拿到道具，增加步数...")
+                    self.canvas_map.delete("move_pos")
+                    self.canvas_map.delete("move_font")
+                elif isinstance(entity, Door):
+                    print("用户到达门...")
+                    # 检查用户是否有钥匙
+                    if self.game_logic.get_player().is_get_key():
+                        print("用户已拿到key，游戏胜利...")
+                        self.canvas_map.delete("door_pos")
+                        self.canvas_map.delete("door_font")
+                    else:
+                        print("用户未拿到key...")
+                else:
+                    print("用户检测到未知实体...")
+
+            # 移动用户位置 旧的位置删除 新的位置画出用户
+            self.canvas_map.delete("player_pos")
+            self.canvas_map.delete("player_font")
+            self.game_logic.move_player(direction)
+            player_x, player_y = self.game_logic.get_player().get_position()
+            self.canvas_map.create_rectangle(player_y * self.item_width, player_x * self.item_height,
+                                             (player_y + 1) * self.item_width,
+                                             (player_x + 1) * self.item_height, fill=MAP_COLOR["PLAYER"],
+                                             tag="player_pos")
+            self.canvas_map.create_text((player_y + 0.5) * self.item_width, (player_x + 0.5) * self.item_height,
+                                        text="Ibis",
+                                        font="Calibri 15", tag="player_font")
+        else:
+            # 墙
+            print(INVALID)
+        # 玩家步数+1
+        self.game_logic.get_player().max_move_count = self.game_logic.get_player().max_move_count - 1
+
+        # 检查游戏是否赢了
+        if self.game_logic.won():
+            print(WIN_TEXT)
+            messagebox.showinfo('You won!', 'You have finished the level!')
+            sys.exit()
+
+        # 检查用户步数是否耗尽
+        if self.game_logic.get_player().moves_remaining() < 1:
+            print(LOSE_TEST)
+            messagebox.showinfo('You lost!', LOSE_TEST)
+            sys.exit()
+
+    # 开始新得游戏
+    def new_game(self):
+        print("New Game Start...")
+
+    # 游戏结束
+    def quit(self):
+        print("Game is over...")
+
 # ============================== Controller Class End =========================================
 
 
 # ============================== Main Method ================================================
 if __name__ == "__main__":
-    # game_app = GameApp(dungeon_name="game1.txt")
-    AbstractGrid(master=None, rows=8, cols=8, width=800, height=600, color=BASE_COLOR)
+    GameApp(dungeon_name="game1.txt")
+    # 主窗口
+    window = tk.Tk()
+    # 标题
+    window.title("Key Cave Adventure Game")
+    # 窗口大小
+    window.geometry("{}x{}".format(WINDOWS_WIDTH, WINDOWS_HEIGHT))
+    # 添加组件
+    status_bar = StatusBar(master=window, width=800, height=200)
+    status_bar.pack()
+    # 事件循环
+    window.mainloop()

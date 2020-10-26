@@ -806,12 +806,18 @@ class AdvancedDungeonMap(DungeonMap):
         print(kwargs)
         print(kwargs['bg'])
         super().__init__(master=master, size=size, width=width, **kwargs)
+
         # 背景改为草地
         img_empty = Image.open("./images/empty.png")
-        img_empty = img_empty.resize((width*size, width*size))
+        img_empty = img_empty.resize((self.item_width, self.item_height))
         global empty_pic
         empty_pic = ImageTk.PhotoImage(img_empty)
-        self.create_image(0, 0, anchor=tk.NW, image=empty_pic)
+        # self.create_image(0, 0, anchor=tk.NW, image=empty_pic)
+        for x in range(size):
+            for y in range(size):
+                if not self.map_info.get((x, y), None):
+                    # 草地
+                    self.create_image(y * self.item_width, x * self.item_width, anchor=tk.NW, image=empty_pic)
         # 所有墙坐标
         wall_pos = []
         for item_pos, item in self.map_info.items():
@@ -868,6 +874,10 @@ class AdvancedDungeonMap(DungeonMap):
         self.delete("key_font")
         self.delete("move_font")
         self.delete("door_font")
+        # 绘制墙
+        print(wall_pos)
+        for x, y in wall_pos:
+            self.create_image(x, y, anchor=tk.NW, image=wall_pic)
         # 绘制人物坐标
         player_x, player_y = self.play_pos
         # self.create_rectangle(player_y * self.item_width, player_x * self.item_height,
@@ -878,10 +888,6 @@ class AdvancedDungeonMap(DungeonMap):
         global player_pic
         player_pic = ImageTk.PhotoImage(img5)
         self.create_image(player_y * self.item_width, player_x * self.item_height, anchor=tk.NW, image=player_pic, tag="player_pos")
-        # 绘制墙
-        print(wall_pos)
-        for x, y in wall_pos:
-            self.create_image(x, y, anchor=tk.NW, image=wall_pic)
 
 
 class KeyPad(AbstractGrid):
@@ -1558,6 +1564,7 @@ class GameApp(object):
             self.canvas_map.delete("player_pos")
             self.canvas_map.delete("player_font")
             self.game_logic.move_player(direction)
+            # 背景增加草坪
             player_x, player_y = self.game_logic.get_player().get_position()
             if self.task == TASK_ONE:
                 self.canvas_map.create_rectangle(player_y * self.item_width, player_x * self.item_height,
@@ -1569,8 +1576,12 @@ class GameApp(object):
                                             font="Calibri 15", tag="player_font")
             elif self.task == TASK_TWO:
                 self.canvas_map.create_image(player_y * self.item_width, player_x * self.item_height,anchor=tk.NW,
+                                             image=empty_pic)
+                self.canvas_map.create_image(player_y * self.item_width, player_x * self.item_height,anchor=tk.NW,
                                              image=player_pic, tag="player_pos")
             elif self.task == TASK_MASTER:
+                self.canvas_map.create_image(player_y * self.item_width, player_x * self.item_height,anchor=tk.NW,
+                                             image=empty_pic)
                 self.canvas_map.create_image(player_y * self.item_width, player_x * self.item_height,anchor=tk.NW,
                                              image=player_pic, tag="player_pos")
         else:
@@ -1744,7 +1755,6 @@ class GameApp(object):
         self.label.destroy()
         self.add_component()
 
-
     # 游戏结束
     def quit(self):
         print("Game is over...")
@@ -1760,7 +1770,7 @@ class GameApp(object):
 # ============================== Main Method ================================================
 if __name__ == "__main__":
     # GameApp(dungeon_name="game1.txt", task=TASK_ONE)
-    GameApp(dungeon_name="game3.txt", task=TASK_MASTER)
+    GameApp(dungeon_name="game2.txt", task=TASK_TWO)
     # 主窗口
     # window = tk.Tk()
     # 标题
@@ -1802,5 +1812,6 @@ if __name__ == "__main__":
     # frame.pack()
     # 事件循环
     # window.mainloop()
+
 
 

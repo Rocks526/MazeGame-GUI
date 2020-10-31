@@ -1,10 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter.filedialog import askdirectory, askopenfile
-import sys
 from PIL import Image, ImageTk
-import json
-import os
 
 
 # ==============================  Support Start =========================================
@@ -74,6 +71,8 @@ GAME_LEVELS = {
     "game2.txt": 12,
     "game3.txt": 19,
 }
+
+LOST_MSG = "You have lost the game,Would you like to play again?\n"
 
 PLAYER = "O"
 KEY = "K"
@@ -508,198 +507,6 @@ class Player(Entity):
 
 
 # ============================== View Class Start =========================================
-# class MainWindow(object):
-#     """
-#     主窗口
-#     """
-#     def __init__(self, game_logic, width=800, height=800, task=TASK_ONE):
-#         # 屏幕宽度
-#         self.width = width
-#         # 屏幕高度
-#         self.height = height
-#         # 窗口模式
-#         self.task = task
-#         # 地图宽度
-#         self.map_width = 600
-#         # 地图的高度
-#         self.map_height = 600
-#         # 游戏信息封装实体
-#         self.game_logic = game_logic
-#         # 地牢建筑
-#         self.map_info = game_logic.get_game_information()
-#         # 地牢长度、宽度
-#         self.map_count = game_logic.get_dungeon_size()
-#         # 玩家起始位置
-#         self.play_pos = game_logic.get_player().get_position()
-#         # 主窗口
-#         self.window = tk.Tk()
-#         # 标题
-#         self.window.title("Key Cave Adventure Game")
-#         # 窗口大小
-#         self.window.geometry("{}x{}".format(width, height))
-#         # 添加组件
-#         self.add_compent()
-#         # 进入主循环
-#         self.window.mainloop()
-#
-#     def add_compent(self):
-#         # 最顶上的Label
-#         self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green")
-#         # label定位 顶部 X填充
-#         self.label.pack(side=tk.TOP, fill=tk.X)
-#
-#         # TASK_ONE
-#         if self.task == TASK_ONE:
-#             # 游戏地图
-#             self.canvas_map = tk.Canvas(self.window, bg=BASE_COLOR, width=self.map_width, height=self.height)
-#             self.canvas_map.pack(side=tk.LEFT)
-#             # 游戏键盘
-#             self.canvas_wsad = tk.Canvas(self.window, bg="white", width=self.width - self.map_width, height=self.height)
-#             self.canvas_wsad.pack(side=tk.RIGHT)
-#             # w按键
-#             self.canvas_wsad.create_rectangle(0 * (self.width - self.map_width)/3, self.height/3, 1 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT, fill=MAP_COLOR['WALL'])
-#             self.canvas_wsad.create_text(0.5 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT/2, text="W", font="Calibri 20")
-#             # s按键
-#             self.canvas_wsad.create_rectangle(1 * (self.width - self.map_width)/3, self.height/3, 2 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT, fill=MAP_COLOR['WALL'])
-#             self.canvas_wsad.create_text(1.5 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT/2, text="S", font="Calibri 20")
-#             # n按键
-#             self.canvas_wsad.create_rectangle(1 * (self.width - self.map_width)/3, self.height/3 - WSAD_HEIGHT, 2 * (self.width - self.map_width)/3, self.height/3, fill=MAP_COLOR['WALL'])
-#             self.canvas_wsad.create_text(1.5 * (self.width - self.map_width)/3, self.height/3 - WSAD_HEIGHT/2, text="N", font="Calibri 20")
-#             # e按键
-#             self.canvas_wsad.create_rectangle(2 * (self.width - self.map_width)/3, self.height/3, 3 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT, fill=MAP_COLOR['WALL'])
-#             self.canvas_wsad.create_text(2.5 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT/2, text="E", font="Calibri 20")
-#
-#             # 保存键盘坐标 确定用户点击是哪个键
-#             self.canvas_wsad_pos = {
-#                 "W": [0 * (self.width - self.map_width)/3, self.height/3, 1 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT],
-#                 "S": [1 * (self.width - self.map_width)/3, self.height/3, 2 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT],
-#                 "N": [1 * (self.width - self.map_width)/3, self.height/3 - WSAD_HEIGHT, 2 * (self.width - self.map_width)/3, self.height/3],
-#                 "E": [2 * (self.width - self.map_width)/3, self.height/3, 3 * (self.width - self.map_width)/3, self.height/3 + WSAD_HEIGHT]
-#             }
-#
-#             # 游戏地图初始化
-#             # 格子高度和宽度
-#             self.item_height = self.map_height/self.map_count
-#             self.item_width = self.map_width/self.map_count
-#             for item_pos, item in self.map_info.items():
-#                 x, y = item_pos
-#                 if isinstance(item, Wall):
-#                     print("WALL === {},{}".format(x, y))
-#                     self.canvas_map.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width, (x + 1) * self.item_height, fill=MAP_COLOR["WALL"])
-#                 elif isinstance(item, Key):
-#                     print("Key === {},{}".format(x, y))
-#                     self.canvas_map.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width, (x + 1) * self.item_height, fill=MAP_COLOR["KEY"], tag="key_pos")
-#                     self.canvas_map.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Trash", font="Calibri 15", tag="key_font")
-#                 elif isinstance(item, MoveIncrease):
-#                     print("Move === {},{}".format(x, y))
-#                     self.canvas_map.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width, (x + 1) * self.item_height, fill=MAP_COLOR["MOVEINCREASE"], tag="move_pos")
-#                     self.canvas_map.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Banana", font="Calibri 15", tag="move_font")
-#                 elif isinstance(item, Door):
-#                     print("Door === {},{}".format(x, y))
-#                     self.canvas_map.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width, (x + 1) * self.item_height, fill=MAP_COLOR["DOOR"], tag="door_pos")
-#                     self.canvas_map.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Nest", font="Calibri 15", tag="door_font")
-#                 else:
-#                     print("No Right Entity...")
-#             # 绘制人物坐标
-#             player_x, player_y = self.play_pos
-#             self.canvas_map.create_rectangle(player_y * self.item_width, player_x * self.item_height, (player_y + 1) * self.item_width,
-#                                              (player_x + 1) * self.item_height, fill=MAP_COLOR["PLAYER"], tag="player_pos")
-#             self.canvas_map.create_text((player_y + 0.5) * self.item_width, (player_x + 0.5) * self.item_height, text="Ibis",
-#                                          font="Calibri 15", tag="player_font")
-#
-#             # 绑定用户鼠标/键盘事件
-#             self.canvas_wsad.bind('<Button-1>', self.user_clicked_mouse)
-#             # 让画布获得焦点,对于键盘
-#             self.canvas_map.focus_set()
-#             self.canvas_map.bind('<Key>', self.user_clicked_keyboard)
-#
-#         # TASK_TWO
-#         elif self.task == TASK_TWO:
-#             pass
-#
-#     # 根据用户点击屏幕坐标 计算用户点击的值
-#     def user_clicked_mouse(self, event):
-#         map = {
-#             "W": "A",
-#             "S": "S",
-#             "N": "W",
-#             "E": "D"
-#         }
-#         for direction, pos in self.canvas_wsad_pos.items():
-#             if event.x > pos[0] and event.x < pos[2] and event.y > pos[1] and event.y < pos[3]:
-#                 # W S N E 转换 W S A D
-#                 direction = map[direction]
-#                 # 用户逻辑处理
-#                 self.user_input_handler(direction)
-#
-#     # 根据用户点击的键盘 计算用户点击的值
-#     def user_clicked_keyboard(self, event):
-#         if event.char in ['a', 'w', 's', 'd']:
-#             self.user_input_handler(event.char.upper())
-#
-#     # 用户输入处理逻辑
-#     def user_input_handler(self, direction):
-#         global Player_Prev_Pos
-#         print("用户往{}方向走了一步...".format(direction))
-#         Player_Prev_Pos = direction
-#         # 检查指定方向是否有实体
-#         if not self.game_logic.collision_check(direction):
-#             # 不会碰到实体 可能没有实体 或实体是道具
-#             entity = self.game_logic.get_entity_in_direction(direction)
-#             if not entity:
-#                 # 没有实体 直接移动
-#                 pass
-#             else:
-#                 # 道具 钥匙 或 门
-#                 entity.on_hit(self.game_logic)
-#                 # 判断是碰到什么实体 删除对应的图标 移动用户位置
-#                 if isinstance(entity, Key):
-#                     print("用户拿到钥匙...")
-#                     self.canvas_map.delete("key_pos")
-#                     self.canvas_map.delete("key_font")
-#                 elif isinstance(entity, MoveIncrease):
-#                     print("用户拿到道具，增加步数...")
-#                     self.canvas_map.delete("move_pos")
-#                     self.canvas_map.delete("move_font")
-#                 elif isinstance(entity, Door):
-#                     print("用户到达门...")
-#                     # 检查用户是否有钥匙
-#                     if self.game_logic.get_player().is_get_key():
-#                         print("用户已拿到key，游戏胜利...")
-#                         self.canvas_map.delete("door_pos")
-#                         self.canvas_map.delete("door_font")
-#                     else:
-#                         print("用户未拿到key...")
-#
-#             # 移动用户位置 旧的位置删除 新的位置画出用户
-#             self.canvas_map.delete("player_pos")
-#             self.canvas_map.delete("player_font")
-#             self.game_logic.move_player(direction)
-#             player_x, player_y = self.game_logic.get_player().get_position()
-#             self.canvas_map.create_rectangle(player_y * self.item_width, player_x * self.item_height,
-#                                              (player_y + 1) * self.item_width,
-#                                              (player_x + 1) * self.item_height, fill=MAP_COLOR["PLAYER"],
-#                                              tag="player_pos")
-#             self.canvas_map.create_text((player_y + 0.5) * self.item_width, (player_x + 0.5) * self.item_height,
-#                                         text="Ibis",
-#                                         font="Calibri 15", tag="player_font")
-#         else:
-#             # 墙
-#             print(INVALID)
-#         # 玩家步数+1
-#         self.game_logic.get_player().max_move_count = self.game_logic.get_player().max_move_count - 1
-#
-#         # 检查游戏是否赢了
-#         if self.game_logic.won():
-#             print(WIN_TEXT)
-#             messagebox.showinfo('You won!', 'You have finished the level!')
-#             sys.exit()
-#
-#         # 检查用户步数是否耗尽
-#         if self.game_logic.get_player().moves_remaining() < 1:
-#             print(LOSE_TEST)
-#             messagebox.showinfo('You lost!', LOSE_TEST)
-#             sys.exit()
 
 
 class AbstractGrid(tk.Canvas):
@@ -728,8 +535,6 @@ class AbstractGrid(tk.Canvas):
         # 背景色
         self.bg = kwargs['bg']
         print(self.args)
-        # 画布
-        # self.canvas = tk.Canvas(master=self.master, width=self.width, height=self.height)
 
 
 class DungeonMap(AbstractGrid):
@@ -815,18 +620,14 @@ class AdvancedDungeonMap(DungeonMap):
         # self.create_image(0, 0, anchor=tk.NW, image=empty_pic)
         for x in range(size):
             for y in range(size):
-                if not self.map_info.get((x, y), None):
-                    # 草地
-                    self.create_image(y * self.item_width, x * self.item_width, anchor=tk.NW, image=empty_pic)
+                self.create_image(y * self.item_width, x * self.item_width, anchor=tk.NW, image=empty_pic)
         # 所有墙坐标
         wall_pos = []
         for item_pos, item in self.map_info.items():
             x, y = item_pos
             if isinstance(item, Wall):
                 print("WALL === {},{}".format(x, y))
-                # self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
-                #                                  (x + 1) * self.item_height, fill=MAP_COLOR["WALL"])
-                img1 = Image.open("./images/wall.gif")
+                img1 = Image.open("./images/wall.png")
                 img1 = img1.resize((self.item_width, self.item_height))
                 global wall_pic
                 wall_pic = ImageTk.PhotoImage(img1)
@@ -834,11 +635,7 @@ class AdvancedDungeonMap(DungeonMap):
                 self.create_image(y * self.item_width, x * self.item_height, anchor=tk.NW, image=wall_pic)
             elif isinstance(item, Key):
                 print("Key === {},{}".format(x, y))
-                # self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
-                #                                  (x + 1) * self.item_height, fill=MAP_COLOR["KEY"], tag="key_pos")
-                # self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Trash",
-                #                             font="Calibri 15", tag="key_font")
-                img2 = Image.open("./images/key.gif")
+                img2 = Image.open("./images/key.png")
                 img2 = img2.resize((self.item_width, self.item_height))
                 global key_pic
                 key_pic = ImageTk.PhotoImage(img2)
@@ -846,23 +643,13 @@ class AdvancedDungeonMap(DungeonMap):
                 self.create_image(y * self.item_width, x * self.item_height, anchor=tk.NW, image=key_pic, tag="key_pos")
             elif isinstance(item, MoveIncrease):
                 print("Move === {},{}".format(x, y))
-                # self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
-                #                                  (x + 1) * self.item_height, fill=MAP_COLOR["MOVEINCREASE"],
-                #                                  tag="move_pos")
-                # self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Banana",
-                #                             font="Calibri 15", tag="move_font")
-                img3 = Image.open("./images/moveIncrease.gif")
+                img3 = Image.open("./images/moveIncrease.png")
                 img3 = img3.resize((self.item_width, self.item_height))
                 global move_increase_pic
                 move_increase_pic = ImageTk.PhotoImage(img3)
                 self.create_image(y * self.item_width, x * self.item_height, anchor=tk.NW, image=move_increase_pic, tag="move_pos")
             elif isinstance(item, Door):
-                # print("Door === {},{}".format(x, y))
-                # self.create_rectangle(y * self.item_width, x * self.item_height, (y + 1) * self.item_width,
-                #                                  (x + 1) * self.item_height, fill=MAP_COLOR["DOOR"], tag="door_pos")
-                # self.create_text((y + 0.5) * self.item_width, (x + 0.5) * self.item_height, text="Nest",
-                #                             font="Calibri 15", tag="door_font")
-                img4 = Image.open("./images/door.gif")
+                img4 = Image.open("./images/door.png")
                 img4 = img4.resize((self.item_width, self.item_height))
                 global door_pic
                 door_pic = ImageTk.PhotoImage(img4)
@@ -880,10 +667,7 @@ class AdvancedDungeonMap(DungeonMap):
             self.create_image(x, y, anchor=tk.NW, image=wall_pic)
         # 绘制人物坐标
         player_x, player_y = self.play_pos
-        # self.create_rectangle(player_y * self.item_width, player_x * self.item_height,
-        #                                  (player_y + 1) * self.item_width,
-        #                                  (player_x + 1) * self.item_height, fill=MAP_COLOR["PLAYER"], tag="player_pos")
-        img5 = Image.open("./images/player.gif")
+        img5 = Image.open("./images/player.png")
         img5 = img5.resize((self.item_width, self.item_height))
         global player_pic
         player_pic = ImageTk.PhotoImage(img5)
@@ -962,7 +746,7 @@ class StatusBar(tk.Frame):
         self.button_new_game.pack(side=tk.TOP, expand=True, padx=100)
         self.button_game_over.pack(side=tk.BOTTOM, expand=True, padx=100)
         # # frame2
-        img = Image.open("./images/clock.gif")
+        img = Image.open("./images/clock.png")
         img = img.resize((60, 60))
         # TODO 定时器
         global time_pic, custom_time
@@ -972,7 +756,7 @@ class StatusBar(tk.Frame):
         self.time.pack(fill=tk.Y)
         self.time.after(1000, self.update_time)
         # frame3
-        img2 = Image.open("./images/lightning.gif")
+        img2 = Image.open("./images/lightning.png")
         img2 = img2.resize((40, 60))
         global move_pic
         move_pic = ImageTk.PhotoImage(img2)
@@ -1024,7 +808,7 @@ class StatusBar2(tk.Frame):
         self.button_new_game.pack(side=tk.TOP, expand=True, padx=50)
         self.button_game_over.pack(side=tk.BOTTOM, expand=True)
         # # frame2
-        img = Image.open("./images/clock.gif")
+        img = Image.open("./images/clock.png")
         img = img.resize((60, 60))
         # TODO 定时器
         global time_pic, custom_time
@@ -1034,7 +818,7 @@ class StatusBar2(tk.Frame):
         self.time.pack(fill=tk.Y)
         self.time.after(1000, self.update_time)
         # frame3
-        img2 = Image.open("./images/lightning.gif")
+        img2 = Image.open("./images/lightning.png")
         img2 = img2.resize((40, 60))
         global move_pic
         move_pic = ImageTk.PhotoImage(img2)
@@ -1042,7 +826,7 @@ class StatusBar2(tk.Frame):
                              image=move_pic, compound="left", width=200, height=60, bg="White")
         self.move.pack(fill=tk.Y)
         # frame4
-        img3 = Image.open("./images/lives.gif")
+        img3 = Image.open("./images/lives.png")
         img3 = img3.resize((60, 60))
         global heart_pic, Heart_Num
         heart_pic = ImageTk.PhotoImage(img3)
@@ -1323,22 +1107,29 @@ class GameApp(object):
             pass
         elif self.task == TASK_TWO:
             menu_bar = tk.Menu(master=self.window)
-            child_menu = tk.Menu(master=menu_bar)
+            child_menu = tk.Menu(master=menu_bar, tearoff=0)
             menu_bar.add_cascade(label="File", menu=child_menu)
             child_menu.add_command(label="New game", command=self.new_game)
+            child_menu.add_separator()
             child_menu.add_command(label="Load game", command=self.load_game)
+            child_menu.add_separator()
             child_menu.add_command(label="Save game", command=self.save_game)
+            child_menu.add_separator()
             child_menu.add_command(label="Quit", command=self.window.destroy)
             self.window.config(menu=menu_bar)
         elif self.task == TASK_MASTER:
             # 添加最高分数
-            menu_bar = tk.Menu(master=self.window)
-            child_menu = tk.Menu(master=menu_bar)
+            menu_bar = tk.Menu(master=self.window, tearoff=0)
+            child_menu = tk.Menu(master=menu_bar, tearoff=0)
             menu_bar.add_cascade(label="File", menu=child_menu)
             child_menu.add_command(label="New game", command=self.new_game)
+            child_menu.add_separator()
             child_menu.add_command(label="Load game", command=self.load_game)
+            child_menu.add_separator()
             child_menu.add_command(label="Save game", command=self.save_game)
+            child_menu.add_separator()
             child_menu.add_command(label="High scores", command=self.show_high_score)
+            child_menu.add_separator()
             child_menu.add_command(label="Quit", command=self.window.destroy)
             self.window.config(menu=menu_bar)
         else:
@@ -1386,7 +1177,8 @@ class GameApp(object):
             # 保存地图
             f.write(self.dungeon_name + "\n")
             # 保存用户位置
-            f.write(json.dumps(self.game_logic.get_player().get_position()) + "\n")
+            # f.write(json.dumps(self.game_logic.get_player().get_position()) + "\n")
+            f.write(str(self.game_logic.get_player().get_position()) + "\n")
             # 保存用户剩余步数
             f.write(str(self.get_player_move()) + "\n")
             # TODO 保存当前使用的时间
@@ -1410,26 +1202,31 @@ class GameApp(object):
         FILE_PATH = askopenfile()
         self.root.destroy()
         print(FILE_PATH.name)
-        file_is_exist = os.path.exists(str(FILE_PATH.name))
-        if file_is_exist:
-            try:
-                with open(FILE_PATH.name, 'r') as f:
-                    flag = f.readline().replace("\n", "")
-                    if flag != FILE_PREFIX:
-                        messagebox.showerror('文件加载!', '文件加载错误...请选择正确的游戏文件...')
-                    self.task = int(f.readline().replace("\n", ""))
-                    self.dungeon_name = f.readline().replace("\n", "")
-                    player_pos = f.readline().replace("\n", "")
-                    player_pos = json.loads(player_pos)
-                    plyaer_move = int(f.readline().replace("\n", ""))
-                    custom_time = f.readline().replace("\n", "").split(":")
-                    products = f.readline().split(":")
-                    self.recovery_game(player_pos, plyaer_move, custom_time, products)
-            except Exception as e:
-                # print(e.with_traceback())
-                messagebox.showerror('文件加载!', '文件加载错误...请选择正确的游戏文件...')
-        else:
-            messagebox.showerror('文件加载!', '文件加载错误...该文件不存在...')
+        # file_is_exist = os.path.exists(str(FILE_PATH.name))
+        # if file_is_exist:
+        try:
+            with open(FILE_PATH.name, 'r') as f:
+                flag = f.readline().replace("\n", "")
+                if flag != FILE_PREFIX:
+                    messagebox.showerror('文件加载!', '文件加载错误...请选择正确的游戏文件...')
+                self.task = int(f.readline().replace("\n", ""))
+                self.dungeon_name = f.readline().replace("\n", "")
+                player_pos = f.readline().replace("\n", "")
+                # player_pos = json.loads(player_pos)
+                player_pos = player_pos.replace("'", "").replace("(", "").replace(")", "").replace(" ", "")
+                player_pos_tmp = []
+                for i in player_pos.split(","):
+                    player_pos_tmp.append(int(i))
+                player_pos = player_pos_tmp
+                plyaer_move = int(f.readline().replace("\n", ""))
+                custom_time = f.readline().replace("\n", "").split(":")
+                products = f.readline().split(":")
+                self.recovery_game(player_pos, plyaer_move, custom_time, products)
+        except Exception as e:
+            # print(e.with_traceback())
+            messagebox.showerror('文件加载!', '文件加载错误...请选择正确的游戏文件...')
+        # else:
+        #     messagebox.showerror('文件加载!', '文件加载错误...该文件不存在...')
 
     # 恢复游戏
     def recovery_game(self, player_pos, plyaer_move, custom_timed, products):
@@ -1460,12 +1257,19 @@ class GameApp(object):
             elif item == str(MoveIncrease()):
                 self.canvas_map.delete("move_pos")
                 self.game_logic.get_player().add_item(MoveIncrease())
+        # 删除的道具地方恢复草坪
+        global empty_pic
+        for item_pos, item in self.game_logic.get_game_information().items():
+            x, y = item_pos
+            if isinstance(item, Key) or isinstance(item, MoveIncrease):
+                if str(item) in products:
+                    self.canvas_map.create_image(y * self.item_width, x * self.item_height, anchor=tk.NW, image=empty_pic)
 
     def add_component(self):
         if self.task == TASK_ONE:
             # TASK 1
             # 最顶上的Label
-            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green")
+            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green",font = ("Helvetica", 32))
             # label定位 顶部 X填充
             self.label.pack(side=tk.TOP, fill=tk.X)
             # 窗口宽800*600 分给游戏地图600*600 键盘200*600
@@ -1483,7 +1287,7 @@ class GameApp(object):
         elif self.task == TASK_TWO:
             # TASK 2
             # 最顶上的Label
-            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green")
+            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green",font = ("Helvetica", 32))
             # label定位 顶部 X填充
             self.label.pack(side=tk.TOP, fill=tk.X)
             # 底部状态栏
@@ -1503,7 +1307,7 @@ class GameApp(object):
             self.canvas_key.pack(side=tk.RIGHT)
         elif self.task == TASK_MASTER:
             # 最顶上的Label
-            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green")
+            self.label = tk.Label(self.window, text="Key Cave Adventure Game", bg="Medium spring green",font = ("Helvetica", 32))
             # label定位 顶部 X填充
             self.label.pack(side=tk.TOP, fill=tk.X)
             # 底部状态栏
@@ -1651,20 +1455,23 @@ class GameApp(object):
         if res:
             self.new_game()
         else:
-            sys.exit()
+            # sys.exit()
+            self.window.destroy()
 
     # 游戏胜利处理
     def game_win_handler(self):
         global custom_time, HIGH_SCORES, SCORE_TMP
         if self.task == TASK_ONE:
             messagebox.showinfo('You won!', 'You have finished the level!')
-            sys.exit()
+            # sys.exit()
+            self.window.destroy()
         elif self.task == TASK_TWO:
             res = messagebox.askyesno('You won!', 'You have finished the level with a score of {}. \n Would you like to play again?'.format(custom_time))
             if res:
                 self.new_game()
             else:
-                sys.exit()
+                # sys.exit()
+                self.window.destroy()
         elif self.task == TASK_MASTER:
             # 是否打破记录
             flag = False
@@ -1691,7 +1498,8 @@ class GameApp(object):
                 if res:
                     self.new_game()
                 else:
-                    sys.exit()
+                    # sys.exit()
+                    self.window.destroy()
         else:
             print("错误的任务选型..")
 
@@ -1718,24 +1526,23 @@ class GameApp(object):
     def game_over_handler(self):
         global custom_time
         if self.task == TASK_ONE:
-            messagebox.showinfo('You lost!', LOSE_TEST)
-            sys.exit()
+            messagebox.showinfo('You lost!', LOST_MSG)
+            # sys.exit()
+            self.window.destroy()
         elif self.task == TASK_TWO:
-            res = messagebox.askyesno('You lost!',
-                                      'You have finished the level with a score of {}. \n Would you like to play again?'.format(
-                                          custom_time))
+            res = messagebox.askyesno('You lost!', LOST_MSG)
             if res:
                 self.new_game()
             else:
-                sys.exit()
+                # sys.exit()
+                self.window.destroy()
         elif self.task == TASK_MASTER:
-            res = messagebox.askyesno('You lost!',
-                                      'You have finished the level with a score of {}. \n Would you like to play again?'.format(
-                                          custom_time))
+            res = messagebox.askyesno('You lost!', LOST_MSG)
             if res:
                 self.new_game()
             else:
-                sys.exit()
+                # sys.exit()
+                self.window.destroy()
         else:
             print("错误的任务选型..")
 
@@ -1758,7 +1565,8 @@ class GameApp(object):
     # 游戏结束
     def quit(self):
         print("Game is over...")
-        sys.exit()
+        # sys.exit()
+        self.window.destroy()
 
     # 获取用户当前剩余步数
     def get_player_move(self):
@@ -1769,49 +1577,7 @@ class GameApp(object):
 
 # ============================== Main Method ================================================
 if __name__ == "__main__":
-    # GameApp(dungeon_name="game1.txt", task=TASK_ONE)
     GameApp(dungeon_name="game2.txt", task=TASK_TWO)
-    # 主窗口
-    # window = tk.Tk()
-    # 标题
-    # window.title("Key Cave Adventure Game")
-    # 窗口大小
-    # window.geometry("{}x{}".format(WINDOWS_WIDTH, WINDOWS_HEIGHT))
-    # 添加组件
-    # game_logic = GameLogic()
-    # 窗口宽800*600 分给游戏地图600*600 键盘200*600
-    # 游戏每个格子的宽和高 = 600 / 地图size
-    # item_width = int(600 / game_logic.get_dungeon_size())
-    # item_height = int(600 / game_logic.get_dungeon_size())
-    # canvas_map = AdvancedDungeonMap(window, game_logic.get_dungeon_size(), width=item_width,
-    #                              map_info=game_logic.get_game_information(),
-    #                              player_pos=game_logic.get_player().get_position(),
-    #                              bg=BASE_COLOR)
-    # canvas_map.pack()
-
-    # m1 = Image.open("./images/wall.gif")
-    # m1 = m1.resize((120, 120))
-    # m2 = ImageTk.PhotoImage(m1)
-    # map = tk.Canvas(master=window, width=600, height=600, bg="Red")
-    # map.create_rectangle(0, 0, 180, 180, fill=MAP_COLOR["WALL"])
-    # map.create_image(0, 0, anchor=tk.NW, image=m2)
-    # map.pack()
-
-
-    # status_bar = StatusBar(master=window, width=800, height=100)
-    # status_bar.pack()
-    # frame = tk.Frame(window, width=80, height=80)
-    # img = Image.open("./images/clock.png")
-    # img2 = img.resize((100, 100))
-    # resource = ImageTk.PhotoImage(img2)
-    # time = tk.Label(frame, text="Time elapsed \n 0m 31s",
-    #                      image=resource, compound="left")
-    # print(resource.width())
-    # print(resource.height())
-    # time.pack()
-    # frame.pack()
-    # 事件循环
-    # window.mainloop()
 
 
 
